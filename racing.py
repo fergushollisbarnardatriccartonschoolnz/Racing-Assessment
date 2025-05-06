@@ -4,6 +4,8 @@ import random
 import math
 pygame.init()
 
+devmode = False
+
 screen_width = 640
 screen_height = 640
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -15,6 +17,7 @@ clock = pygame.time.Clock()
 ticks = 0
 score = 0
 difficulty = 1
+ticks_ingame = 0
 player_speed = 1
 player_x = 0
 player_y = screen_height*0.75
@@ -32,16 +35,25 @@ entities = []#{"col":(255, 255, 255), "lane":0, "y":0, "xsc":20, "ysc":20}]
                 #lanenumber, time remaining until lane can be generated in again
 recent_generations = {"0":0}
 
-def drawbg(col:tuple, lanecol:tuple):
+def q():
+    pygame.quit()
+    quit()
+
+def drawbg(col:tuple, lanecol:tuple|None, wallcol:tuple|None):
     screen.fill(col)
-    pygame.draw.rect(screen, (123, 123, 123), (-wallpos-wallwidth+screen_width/2, 0, wallwidth, screen_height)) #left wall
-    pygame.draw.rect(screen, (123, 123, 123), (wallpos+screen_width/2, 0, wallwidth, screen_height)) #right wall
-    for i in range(lanes):
-        lanepos = screen_width/2-(i*lanesep)-lanewidth/2+(lanes/2)*lanesep-lanesep/2
-        pygame.draw.rect(screen, lanecol, (lanepos, 0, lanewidth, screen_height*0.8))
-    pygame.draw.rect(screen, (0, 0, 0), (screen_width/2-5, screen_height/2-5, 10, 10)) #middle of screen
+    if wallcol:
+        pygame.draw.rect(screen, wallcol, (-wallpos-wallwidth+screen_width/2, 0, wallwidth, screen_height)) #left wall
+        pygame.draw.rect(screen, wallcol, (wallpos+screen_width/2, 0, wallwidth, screen_height)) #right wall
+    if lanecol:
+        for i in range(lanes):
+            lanepos = screen_width/2-(i*lanesep)-lanewidth/2+(lanes/2)*lanesep-lanesep/2
+            pygame.draw.rect(screen, lanecol, (lanepos, 0, lanewidth, screen_height))
+    if not inmenu and devmode:
+        pygame.draw.rect(screen, (0, 0, 0), (screen_width/2-5, screen_height/2-5, 10, 10)) #middle of screen
 
 def entitytick():
+    temp = False
+
     #draw entities
     score_to_add = 0
     for entity in entities:
@@ -52,7 +64,7 @@ def entitytick():
             entities.pop(entities.index(entity))
             score_to_add += 1
         elif entity["y"] > player_y-player_y_size-entity["ysc"] and entity["y"] < player_y and ent_xpos > screen_width/2+player_x-player_x_size/2-entity["xsc"] and ent_xpos < screen_width/2+player_x+player_x_size/2:
-            return "end_program"
+            temp = True
 
     #generate entities
     for i in range(lanes):
@@ -65,6 +77,8 @@ def entitytick():
             if recent_generations[str(i)] <= 0:
                 recent_generations.pop(str(i))
 
+    if temp:
+        return "ded"
     return score_to_add
 
 def message(msg:str, txt_colour:tuple, bkgd_colour:tuple|None, pos:tuple, f:str, fontsize:int|float):
@@ -72,62 +86,92 @@ def message(msg:str, txt_colour:tuple, bkgd_colour:tuple|None, pos:tuple, f:str,
     txt = font.render(msg, True, txt_colour, bkgd_colour)
     text_box = txt.get_rect(center = pos)
     screen.blit(txt, text_box)
-    pygame.display.update()
 
+inmenu = True
 mov = [0, 0]
 keys_left = [pygame.K_a, pygame.K_LEFT]
 keys_right = [pygame.K_d, pygame.K_RIGHT]
-running_program = True
-while running_program:
+while 1==1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running_program = False
+            q()
         if event.type == pygame.KEYDOWN:
             if event.key in keys_left:
                 mov[0] = player_speed
             if event.key in keys_right:
                 mov[1] = player_speed
+            if event.key == pygame.K_SPACE:
+                if inmenu:
+                    inmenu = False
+                else:
+                    inmenu = True
         if event.type == pygame.KEYUP:
             if event.key in keys_left:
                 mov[0] = 0
             if event.key in keys_right:
                 mov[1] = 0
 
-    wallpos = (lanes/2)*lanesep+lanesep/2-lanewidth/2
-    wallwidth = 100
+    if not inmenu:
+        wallpos = (lanes/2)*lanesep+lanesep/2-lanewidth/2
+        wallwidth = 100
 
-    drawbg((143, 143, 143), (101, 101, 101))
-    #(123, 123, 123)
+        drawbg((143, 143, 143), (101, 101, 101), (123, 123, 123))
+        #(123, 123, 123)
 
-    #basically playertick
-    player_momentum += (-mov[0] + mov[1])
-    player_x += player_momentum
-    if player_x > wallpos-player_x_size/2:
-        player_momentum = -abs(player_momentum)
+        #basically playertick
+        player_momentum += (-mov[0] + mov[1])
         player_x += player_momentum
-    elif player_x < -wallpos+player_x_size/2:
-        player_momentum = abs(player_momentum)
-        player_x += player_momentum
-    if player_momentum < drag and player_momentum > -drag:
-        player_momentum = 0
-    if player_momentum > drag:
-        player_momentum -= drag
-        player_momentum *= 1-drag
-    if player_momentum < -drag:
-        player_momentum += drag
-        player_momentum *= 1-drag
-    pygame.draw.rect(screen, (255, 200, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, player_y_size))
+        if player_x > wallpos-player_x_size/2:
+            player_momentum = -abs(player_momentum)
+            player_x += player_momentum
+        elif player_x < -wallpos+player_x_size/2:
+            player_momentum = abs(player_momentum)
+            player_x += player_momentum
+        if player_momentum < drag and player_momentum > -drag:
+            player_momentum = 0
+        if player_momentum > drag:
+            player_momentum -= drag
+            player_momentum *= 1-drag
+        if player_momentum < -drag:
+            player_momentum += drag
+            player_momentum *= 1-drag
+        pygame.draw.rect(screen, (255, 200, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, player_y_size))
 
-    entity_output = entitytick()
-    if entity_output == "end_program":
-        message("game over ):", (0, 0, 0), None, (screen_width/2, screen_height/2), "freesansbold.ttf", 28)
-        message(f"Score: {score}", (0, 0, 0), None, (screen_width/2, 50), "freesansbold.ttf", 20)
-        clock.tick(0.3)
-        running_program = False
+        entity_output = entitytick()
+        if entity_output == "ded":
+            message("game over ):", (0, 0, 0), None, (screen_width/2, screen_height/2), "freesansbold.ttf", 28)
+            message(f"Score: {score}", (0, 0, 0), None, (screen_width/2, 50), "freesansbold.ttf", 20)
+            message("(space to restart)", (0, 0, 0), None, (screen_width/2, screen_height/2+50), "freesansbold.ttf", 18)
+            pygame.display.update()
+            while 1==1:
+                clock.tick(60)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        q()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_SPACE:
+                            inmenu = True
+                if inmenu:
+                    ticks = 0
+                    ticks_ingame = 0
+                    score = 0
+                    player_x = 0
+                    mov = [0, 0]
+                    entities = []
+                    break
+
+        if not inmenu:
+            score += entity_output
+            ticks_ingame += 1
+            message(f"Score: {score}", (0, 0, 0), None, (screen_width/2, 50), "freesansbold.ttf", 20)
+
     else:
-        score += entity_output
-
-    message(f"Score: {score}", (0, 0, 0), None, (screen_width/2, 50), "freesansbold.ttf", 20)
+        drawbg((54, 54, 54), None, None)
+        message("racing.assess", (255, 255, 255), None, (screen_width/2, 147), "freesansbold.ttf", 60)
+        if ticks_ingame <= 0:
+            message("Press space to play", (255, 255, 255), None, (screen_width/2, 212), "freesansbold.ttf", 28)
+        else:
+            message("Paused, press space to unpause", (255, 255, 255), None, (screen_width/2, 212), "freesansbold.ttf", 28)
 
     pygame.display.update()
     clock.tick(60)
