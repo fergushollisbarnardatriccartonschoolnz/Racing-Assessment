@@ -4,14 +4,42 @@ import random
 import math
 pygame.init()
 
-devmode = False
+devmode = True
+devsettings = {"showhitboxes":True, "showsprites":True}
 
 screen_width = 640
 screen_height = 640
 screen = pygame.display.set_mode((screen_width, screen_height))
-game_icon = pygame.image.load('game_icon.png')
+game_icon = pygame.image.load("game_icon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("racing")
+car_lightred = None
+car_red = pygame.image.load("car_red.png")
+car_darkred = None
+car_lightorange = None
+car_orange = pygame.image.load("car_orange.png")
+car_lightyellow = None
+car_yellow = None
+car_brown = None
+car_olive = None
+car_lightgreen = None
+car_green = pygame.image.load("car_green.png")
+car_darkgreen = None
+car_cyan = pygame.image.load("car_cyan.png")
+car_lightblue = None
+car_blue = pygame.image.load("car_blue.png")
+car_darkblue = None
+car_lightpurple = None
+car_purple = pygame.image.load("car_purple.png")
+car_darkpurple = None
+car_light = None
+car_pink = None
+car_darkpink = None
+car_white = None
+car_lightgray = None
+car_gray = None
+car_darkgray = None
+car_black = None
 clock = pygame.time.Clock()
 
 ticks = 0
@@ -23,8 +51,8 @@ player_x = 0
 player_y = screen_height*0.75
 player_momentum = 0
 drag = 0.1
-player_x_size = 50
-player_y_size = 50
+player_x_size = 43
+player_y_size = 86
 
 lanes = 4
 lanesep = 100
@@ -59,7 +87,14 @@ def entitytick():
     for entity in entities:
         entity["y"] += difficulty
         ent_xpos = screen_width/2+(entity["lane"]*lanesep)-(lanes*lanesep)/2-entity["xsc"]/2
-        pygame.draw.rect(screen, entity["col"], (ent_xpos, entity["y"], entity["xsc"], entity["ysc"]))
+        if not devmode or (devmode and devsettings["showsprites"]):
+            #pygame.draw.rect(screen, entity["col"], (ent_xpos, entity["y"], entity["xsc"], entity["ysc"]))
+            screen.blit(pygame.transform.scale(pygame.transform.flip(car_red, False, True), (entity["xsc"], entity["ysc"])), ((ent_xpos, entity["y"]), (entity["xsc"], entity["ysc"])))
+        if devmode and devsettings["showhitboxes"]:
+            pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"], 2, entity["ysc"]))
+            pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"], entity["xsc"], 2))
+            pygame.draw.rect(screen, (255, 0, 0), (ent_xpos+entity["xsc"]-2, entity["y"], 2, entity["ysc"]))
+            pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"]+entity["ysc"]-2, entity["xsc"], 2))
         if entity["y"] > screen_height:
             entities.pop(entities.index(entity))
             score_to_add += 1
@@ -70,7 +105,7 @@ def entitytick():
     for i in range(lanes):
         rand_value = random.randint(0, round(((1+math.sqrt(len(entities)+1))*50)/math.log(score+10)))
         if rand_value == 0 and str(i) not in recent_generations:
-            entities.append({"col":(255, 255, 255), "lane":random.randint(0, lanes), "y":-60, "xsc":60, "ysc":60})
+            entities.append({"col":(255, 255, 255), "lane":random.randint(0, lanes), "y":-120, "xsc":60, "ysc":120})
             recent_generations[str(i)] = math.ceil(120/difficulty)
         if str(i) in recent_generations:
             recent_generations[str(i)] -= 1
@@ -135,7 +170,14 @@ while 1==1:
         if player_momentum < -drag:
             player_momentum += drag
             player_momentum *= 1-drag
-        pygame.draw.rect(screen, (255, 200, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, player_y_size))
+        if not devmode or (devmode and devsettings["showsprites"]):
+            screen.blit(pygame.transform.scale(car_red, (player_x_size, player_y_size)), ((screen_width/2+player_x-player_x_size/2, player_y-player_y_size), (player_x_size, player_y_size)))
+            #pygame.draw.rect(screen, (255, 200, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, player_y_size))
+        if devmode and devsettings["showhitboxes"]:
+            pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, 2, player_y_size))
+            pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, 2))
+            pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x+player_x_size/2-2, player_y-player_y_size, 2, player_y_size))
+            pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x-player_x_size/2, player_y-2, player_x_size, 2))
 
         entity_output = entitytick()
         if entity_output == "ded":
@@ -158,6 +200,9 @@ while 1==1:
                     player_x = 0
                     mov = [0, 0]
                     entities = []
+                    lanes = 4
+                    lanesep = 100
+                    lanewidth = 10
                     break
 
         if not inmenu:
