@@ -199,6 +199,15 @@ while 1==1:
 
         entity_output = entitytick()
         if entity_output == "ded":
+            highscore_read = open("high_score.txt")
+            hs = "".join(list(highscore_read))
+            message(f"high score : {hs}", (0, 0, 0), None, (screen_width/2, screen_height/2+80), "freesansbold.ttf", 16)
+            if int(hs) < score:
+                highscore_write = open("high_score.txt", "w")
+                highscore_write.write(str(score))
+                highscore_write.close()
+                message(f"new high score ({score}) (:", (0, 0, 0), None, (screen_width/2, screen_height/2-50), "freesansbold.ttf", 23)
+            highscore_read.close()
             message("game over ):", (0, 0, 0), None, (screen_width/2, screen_height/2), "freesansbold.ttf", 28)
             message(f"Score: {score}", (0, 0, 0), None, (screen_width/2, 50), "freesansbold.ttf", 20)
             message("(space to restart)", (0, 0, 0), None, (screen_width/2, screen_height/2+50), "freesansbold.ttf", 18)
