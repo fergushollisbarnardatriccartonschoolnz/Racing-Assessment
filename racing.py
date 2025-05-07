@@ -4,7 +4,7 @@ import random
 import math
 pygame.init()
 
-devmode = True
+devmode = False
 devsettings = {"showhitboxes":True, "showsprites":True}
 
 screen_width = 640
@@ -13,33 +13,33 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 game_icon = pygame.image.load("game_icon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("racing")
-car_lightred = None
+car_lightred = pygame.image.load("car_lightred.png")
 car_red = pygame.image.load("car_red.png")
-car_darkred = None
-car_lightorange = None
+car_darkred = pygame.image.load("car_darkred.png")
+car_lightorange = pygame.image.load("car_lightorange.png")
 car_orange = pygame.image.load("car_orange.png")
-car_lightyellow = None
-car_yellow = None
-car_brown = None
-car_olive = None
-car_lightgreen = None
+car_lightyellow = pygame.image.load("car_lightyellow.png")
+car_yellow = pygame.image.load("car_yellow.png")
+car_brown = pygame.image.load("car_brown.png")
+car_olive = pygame.image.load("car_olive.png")
+car_lightgreen = pygame.image.load("car_lightgreen.png")
 car_green = pygame.image.load("car_green.png")
-car_darkgreen = None
+car_darkgreen = pygame.image.load("car_darkgreen.png")
 car_cyan = pygame.image.load("car_cyan.png")
-car_lightblue = None
+car_lightblue = pygame.image.load("car_lightblue.png")
 car_blue = pygame.image.load("car_blue.png")
-car_darkblue = None
-car_lightpurple = None
+car_darkblue = pygame.image.load("car_darkblue.png")
+car_lightpurple = pygame.image.load("car_lightpurple.png")
 car_purple = pygame.image.load("car_purple.png")
-car_darkpurple = None
-car_light = None
-car_pink = None
-car_darkpink = None
-car_white = None
-car_lightgray = None
-car_gray = None
-car_darkgray = None
-car_black = None
+car_darkpurple = pygame.image.load("car_darkpurple.png")
+car_lightpink = pygame.image.load("car_lightpink.png")
+car_pink = pygame.image.load("car_pink.png")
+car_darkpink = pygame.image.load("car_darkpink.png")
+car_white = pygame.image.load("car_white.png")
+car_lightgray = pygame.image.load("car_lightgray.png")
+car_gray = pygame.image.load("car_gray.png")
+car_darkgray = pygame.image.load("car_darkgray.png")
+car_black = pygame.image.load("car_black.png")
 clock = pygame.time.Clock()
 
 ticks = 0
@@ -57,6 +57,14 @@ player_y_size = 86
 lanes = 4
 lanesep = 100
 lanewidth = 10
+
+current_biome = "null"
+biomes = {
+    "null":{"drag":0.1, "playerspd":1, "screenx":640, "screeny":640, "lanes":4, "lanesep":100, "lanewidth":10, "bgcol":(143, 143, 143), "lanecol":(101, 101, 101), "wallcol":(123, 123, 123), "carcols":(car_black, car_darkgray, car_gray, car_lightgray, car_white), "carsize":(60, 120)},
+    "frost":{"drag":0.05, "playerspd":0.7815, "screenx":740, "screeny":640, "lanes":5, "lanesep":100, "lanewidth":10, "bgcol":(140, 140, 200), "lanecol":(100, 100, 160), "wallcol":(120, 120, 180), "carcols":(car_darkblue, car_blue, car_lightblue, car_cyan, car_white, car_lightgray), "carsize":(60, 120)},
+    "volcanic":{"drag":0.175, "playerspd":1.135, "screenx":900, "screeny":720, "lanes":6, "lanesep":110, "lanewidth":12, "bgcol":(200, 140, 140), "lanecol":(160, 100, 100), "wallcol":(180, 120, 120), "carcols":(car_darkred, car_red, car_lightred, car_brown, car_orange, car_lightorange, car_yellow, car_lightyellow, car_black, car_darkgray), "carsize":(85, 170)},
+    "grassland":{"drag":0.105, "playerspd":1.105, "screenx":960, "screeny":700, "lanes":8, "lanesep":102, "lanewidth":10, "bgcol":(100, 160, 100), "lanecol":(60, 120, 60), "wallcol":(80, 140, 80), "carcols":(car_darkgreen, car_green, car_lightgreen, car_gray, car_olive, car_blue, car_yellow, car_red, car_white, car_purple, car_pink, car_lightpink, car_lightpurple, car_lightblue, car_brown), "carsize":(70, 140)}
+          }
 
 entities = []#{"col":(255, 255, 255), "lane":0, "y":0, "xsc":20, "ysc":20}]
 
@@ -89,7 +97,7 @@ def entitytick():
         ent_xpos = screen_width/2+(entity["lane"]*lanesep)-(lanes*lanesep)/2-entity["xsc"]/2
         if not devmode or (devmode and devsettings["showsprites"]):
             #pygame.draw.rect(screen, entity["col"], (ent_xpos, entity["y"], entity["xsc"], entity["ysc"]))
-            screen.blit(pygame.transform.scale(pygame.transform.flip(car_red, False, True), (entity["xsc"], entity["ysc"])), ((ent_xpos, entity["y"]), (entity["xsc"], entity["ysc"])))
+            screen.blit(pygame.transform.scale(pygame.transform.flip(entity["col"], False, True), (entity["xsc"], entity["ysc"])), ((ent_xpos, entity["y"]), (entity["xsc"], entity["ysc"])))
         if devmode and devsettings["showhitboxes"]:
             pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"], 2, entity["ysc"]))
             pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"], entity["xsc"], 2))
@@ -103,9 +111,9 @@ def entitytick():
 
     #generate entities
     for i in range(lanes):
-        rand_value = random.randint(0, round(((1+math.sqrt(len(entities)+1))*50)/math.log(score+10)))
+        rand_value = random.randint(0, round(((1+math.sqrt(len(entities)+1))*127)/difficulty))
         if rand_value == 0 and str(i) not in recent_generations:
-            entities.append({"col":(255, 255, 255), "lane":random.randint(0, lanes), "y":-120, "xsc":60, "ysc":120})
+            entities.append({"col":random.choice(biomes[current_biome]["carcols"]), "lane":random.randint(0, lanes), "y":-biomes[current_biome]["carsize"][1], "xsc":biomes[current_biome]["carsize"][0], "ysc":biomes[current_biome]["carsize"][1]})
             recent_generations[str(i)] = math.ceil(120/difficulty)
         if str(i) in recent_generations:
             recent_generations[str(i)] -= 1
@@ -115,6 +123,17 @@ def entitytick():
     if temp:
         return "ded"
     return score_to_add
+
+def setbiome(biomename): #doesnt work right now ):
+    current_biome = biomename
+    entities = []
+    screen_width = biomes[biomename]["screenx"]
+    screen_height = biomes[biomename]["screeny"]
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    lanes = biomes[biomename]["lanes"]
+    lanesep = biomes[biomename]["lanesep"]
+    lanewidth = biomes[biomename]["lanewidth"]
+    drag = biomes[biomename]["drag"]
 
 def message(msg:str, txt_colour:tuple, bkgd_colour:tuple|None, pos:tuple, f:str, fontsize:int|float):
     font = pygame.font.Font(f, fontsize)
@@ -150,8 +169,7 @@ while 1==1:
         wallpos = (lanes/2)*lanesep+lanesep/2-lanewidth/2
         wallwidth = 100
 
-        drawbg((143, 143, 143), (101, 101, 101), (123, 123, 123))
-        #(123, 123, 123)
+        drawbg(biomes[current_biome]["bgcol"], biomes[current_biome]["lanecol"], biomes[current_biome]["wallcol"])
 
         #basically playertick
         player_momentum += (-mov[0] + mov[1])
@@ -171,7 +189,7 @@ while 1==1:
             player_momentum += drag
             player_momentum *= 1-drag
         if not devmode or (devmode and devsettings["showsprites"]):
-            screen.blit(pygame.transform.scale(car_red, (player_x_size, player_y_size)), ((screen_width/2+player_x-player_x_size/2, player_y-player_y_size), (player_x_size, player_y_size)))
+            screen.blit(pygame.transform.scale(car_gray, (player_x_size, player_y_size)), ((screen_width/2+player_x-player_x_size/2, player_y-player_y_size), (player_x_size, player_y_size)))
             #pygame.draw.rect(screen, (255, 200, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, player_y_size))
         if devmode and devsettings["showhitboxes"]:
             pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, 2, player_y_size))
@@ -194,15 +212,22 @@ while 1==1:
                         if event.key == pygame.K_SPACE:
                             inmenu = True
                 if inmenu:
+                    for biomename in ["null"]:
+                        current_biome = biomename
+                        entities = []
+                        screen_width = biomes[biomename]["screenx"]
+                        screen_height = biomes[biomename]["screeny"]
+                        screen = pygame.display.set_mode((screen_width, screen_height))
+                        lanes = biomes[biomename]["lanes"]
+                        lanesep = biomes[biomename]["lanesep"]
+                        lanewidth = biomes[biomename]["lanewidth"]
+                        drag = biomes[biomename]["drag"]
+                        player_speed = biomes[biomename]["playerspd"]
                     ticks = 0
                     ticks_ingame = 0
                     score = 0
                     player_x = 0
                     mov = [0, 0]
-                    entities = []
-                    lanes = 4
-                    lanesep = 100
-                    lanewidth = 10
                     break
 
         if not inmenu:
@@ -217,6 +242,53 @@ while 1==1:
             message("Press space to play", (255, 255, 255), None, (screen_width/2, 212), "freesansbold.ttf", 28)
         else:
             message("Paused, press space to unpause", (255, 255, 255), None, (screen_width/2, 212), "freesansbold.ttf", 28)
+    
+    #biome changes
+    if score >= 50 and current_biome == "null":
+        for biomename in ["frost"]:
+            screen.fill((40, 40, 40))
+            pygame.display.update()
+            clock.tick(1.65)
+            current_biome = biomename
+            entities = []
+            screen_width = biomes[biomename]["screenx"]
+            screen_height = biomes[biomename]["screeny"]
+            screen = pygame.display.set_mode((screen_width, screen_height))
+            lanes = biomes[biomename]["lanes"]
+            lanesep = biomes[biomename]["lanesep"]
+            lanewidth = biomes[biomename]["lanewidth"]
+            drag = biomes[biomename]["drag"]
+            player_speed = biomes[biomename]["playerspd"]
+    if score >= 175 and current_biome == "frost":
+        for biomename in ["volcanic"]:
+            screen.fill((40, 40, 40))
+            pygame.display.update()
+            clock.tick(1.65)
+            current_biome = biomename
+            entities = []
+            screen_width = biomes[biomename]["screenx"]
+            screen_height = biomes[biomename]["screeny"]
+            screen = pygame.display.set_mode((screen_width, screen_height))
+            lanes = biomes[biomename]["lanes"]
+            lanesep = biomes[biomename]["lanesep"]
+            lanewidth = biomes[biomename]["lanewidth"]
+            drag = biomes[biomename]["drag"]
+            player_speed = biomes[biomename]["playerspd"]
+    if score >= 315 and current_biome == "volcanic":
+        for biomename in ["grassland"]:
+            screen.fill((40, 40, 40))
+            pygame.display.update()
+            clock.tick(1.65)
+            current_biome = biomename
+            entities = []
+            screen_width = biomes[biomename]["screenx"]
+            screen_height = biomes[biomename]["screeny"]
+            screen = pygame.display.set_mode((screen_width, screen_height))
+            lanes = biomes[biomename]["lanes"]
+            lanesep = biomes[biomename]["lanesep"]
+            lanewidth = biomes[biomename]["lanewidth"]
+            drag = biomes[biomename]["drag"]
+            player_speed = biomes[biomename]["playerspd"]
 
     pygame.display.update()
     clock.tick(60)
