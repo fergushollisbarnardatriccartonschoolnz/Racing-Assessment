@@ -125,12 +125,13 @@ def entitytick():
             temp = True
         #death if touchy other entity (that is going faster than it()')self)
         for other_entity in entities:
-            if entity["y"] < other_entity["y"]+other_entity["ysc"]/2+entity["ysc"]/2 and entity["y"] > other_entity["y"]-other_entity["ysc"]/2-entity["ysc"]/2 and entity["lane"] == other_entity["lane"] and entity["speedmult"] < other_entity["speedmult"] and entity != other_entity:
-                entities.pop(entities.index(entity))
+            if entity in entities and other_entity in entities:
+                if entity["y"] < other_entity["y"]+other_entity["ysc"]/2+entity["ysc"]/2 and entity["y"] > other_entity["y"]-other_entity["ysc"]/2-entity["ysc"]/2 and entity["lane"] == other_entity["lane"] and entity["speedmult"] < other_entity["speedmult"] and entity != other_entity:
+                    entities.pop(entities.index(entity))
 
     #generate entities
     for i in range(lanes):
-        rand_value = random.randint(0, round(((1+math.sqrt(len(entities)+1))*127)/difficulty))
+        rand_value = random.randint(0, round(((1+math.sqrt(len(entities)+1))*125*(lanes/5))/difficulty))
         if rand_value == 0 and str(i) not in recent_generations:
             entities.append({"col":random.choice(biomes[current_biome]["carcols"]), "lane":random.randint(0, lanes), "y":-biomes[current_biome]["carsize"][1], "xsc":biomes[current_biome]["carsize"][0], "ysc":biomes[current_biome]["carsize"][1], "speedmult":(random.randint(round((1/difficulty)*100), round(difficulty*100)))/100})
             recent_generations[str(i)] = math.ceil(120/difficulty)
