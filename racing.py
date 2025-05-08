@@ -93,7 +93,7 @@ def entitytick():
     #draw entities
     score_to_add = 0
     for entity in entities:
-        entity["y"] += difficulty
+        entity["y"] += difficulty*entity["speedmult"]
         ent_xpos = screen_width/2+(entity["lane"]*lanesep)-(lanes*lanesep)/2-entity["xsc"]/2
         if not devmode or (devmode and devsettings["showsprites"]):
             #pygame.draw.rect(screen, entity["col"], (ent_xpos, entity["y"], entity["xsc"], entity["ysc"]))
@@ -108,12 +108,15 @@ def entitytick():
             score_to_add += 1
         elif entity["y"] > player_y-player_y_size-entity["ysc"] and entity["y"] < player_y and ent_xpos > screen_width/2+player_x-player_x_size/2-entity["xsc"] and ent_xpos < screen_width/2+player_x+player_x_size/2:
             temp = True
+        for other_entity in entities:
+            if entity["y"] < other_entity["y"]+other_entity["ysc"]/2+entity["ysc"]/2 and entity["y"] > other_entity["y"]-other_entity["ysc"]/2-entity["ysc"]/2 and entity["lane"] == other_entity["lane"] and entity["speedmult"] < other_entity["speedmult"] and entity != other_entity:
+                entities.pop(entities.index(entity))
 
     #generate entities
     for i in range(lanes):
         rand_value = random.randint(0, round(((1+math.sqrt(len(entities)+1))*127)/difficulty))
         if rand_value == 0 and str(i) not in recent_generations:
-            entities.append({"col":random.choice(biomes[current_biome]["carcols"]), "lane":random.randint(0, lanes), "y":-biomes[current_biome]["carsize"][1], "xsc":biomes[current_biome]["carsize"][0], "ysc":biomes[current_biome]["carsize"][1]})
+            entities.append({"col":random.choice(biomes[current_biome]["carcols"]), "lane":random.randint(0, lanes), "y":-biomes[current_biome]["carsize"][1], "xsc":biomes[current_biome]["carsize"][0], "ysc":biomes[current_biome]["carsize"][1], "speedmult":(random.randint(round((1/difficulty)*100), round(difficulty*100)))/100})
             recent_generations[str(i)] = math.ceil(120/difficulty)
         if str(i) in recent_generations:
             recent_generations[str(i)] -= 1
