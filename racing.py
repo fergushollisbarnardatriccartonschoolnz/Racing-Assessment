@@ -4,15 +4,19 @@ import random
 import math
 pygame.init()
 
+#devmode. change it to true to enable viewing hitboxes
 devmode = False
 devsettings = {"showhitboxes":True, "showsprites":True}
 
+#loading the screen
 screen_width = 640
 screen_height = 640
 screen = pygame.display.set_mode((screen_width, screen_height))
 game_icon = pygame.image.load("game_icon.png")
 pygame.display.set_icon(game_icon)
 pygame.display.set_caption("racing")
+
+#textures
 car_lightred = pygame.image.load("car_lightred.png")
 car_red = pygame.image.load("car_red.png")
 car_darkred = pygame.image.load("car_darkred.png")
@@ -42,6 +46,7 @@ car_darkgray = pygame.image.load("car_darkgray.png")
 car_black = pygame.image.load("car_black.png")
 clock = pygame.time.Clock()
 
+#variables setup
 ticks = 0
 score = 0
 difficulty = 1
@@ -54,10 +59,12 @@ drag = 0.1
 player_x_size = 43
 player_y_size = 86
 
+#lane variables
 lanes = 4
 lanesep = 100
 lanewidth = 10
 
+#biome data
 current_biome = "null"
 biomes = {
     "null":{"drag":0.1, "playerspd":1, "screenx":640, "screeny":640, "lanes":4, "lanesep":100, "lanewidth":10, "bgcol":(143, 143, 143), "lanecol":(101, 101, 101), "wallcol":(123, 123, 123), "carcols":(car_black, car_darkgray, car_gray, car_lightgray, car_white), "carsize":(60, 120)},
@@ -66,15 +73,18 @@ biomes = {
     "grassland":{"drag":0.105, "playerspd":1.105, "screenx":960, "screeny":700, "lanes":8, "lanesep":102, "lanewidth":10, "bgcol":(100, 160, 100), "lanecol":(60, 120, 60), "wallcol":(80, 140, 80), "carcols":(car_darkgreen, car_green, car_lightgreen, car_gray, car_olive, car_blue, car_yellow, car_red, car_white, car_purple, car_pink, car_lightpink, car_lightpurple, car_lightblue, car_brown), "carsize":(70, 140)}
           }
 
+#entity data
 entities = []#{"col":(255, 255, 255), "lane":0, "y":0, "xsc":20, "ysc":20}]
 
-                #lanenumber, time remaining until lane can be generated in again
+#lanenumber, time remaining until lane can be generated in again
 recent_generations = {"0":0}
 
+#quit function
 def q():
     pygame.quit()
     quit()
 
+#draw the background
 def drawbg(col:tuple, lanecol:tuple|None, wallcol:tuple|None):
     screen.fill(col)
     if wallcol:
@@ -87,14 +97,17 @@ def drawbg(col:tuple, lanecol:tuple|None, wallcol:tuple|None):
     if not inmenu and devmode:
         pygame.draw.rect(screen, (0, 0, 0), (screen_width/2-5, screen_height/2-5, 10, 10)) #middle of screen
 
+#draw, tick, and generate entities
 def entitytick():
     temp = False
 
     #draw entities
     score_to_add = 0
     for entity in entities:
+        #movement
         entity["y"] += difficulty*entity["speedmult"]
         ent_xpos = screen_width/2+(entity["lane"]*lanesep)-(lanes*lanesep)/2-entity["xsc"]/2
+        #visuals
         if not devmode or (devmode and devsettings["showsprites"]):
             #pygame.draw.rect(screen, entity["col"], (ent_xpos, entity["y"], entity["xsc"], entity["ysc"]))
             screen.blit(pygame.transform.scale(pygame.transform.flip(entity["col"], False, True), (entity["xsc"], entity["ysc"])), ((ent_xpos, entity["y"]), (entity["xsc"], entity["ysc"])))
@@ -103,11 +116,14 @@ def entitytick():
             pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"], entity["xsc"], 2))
             pygame.draw.rect(screen, (255, 0, 0), (ent_xpos+entity["xsc"]-2, entity["y"], 2, entity["ysc"]))
             pygame.draw.rect(screen, (255, 0, 0), (ent_xpos, entity["y"]+entity["ysc"]-2, entity["xsc"], 2))
+        #when go below screen, death and give points
         if entity["y"] > screen_height:
             entities.pop(entities.index(entity))
             score_to_add += 1
+        #kil player if touchy
         elif entity["y"] > player_y-player_y_size-entity["ysc"] and entity["y"] < player_y and ent_xpos > screen_width/2+player_x-player_x_size/2-entity["xsc"] and ent_xpos < screen_width/2+player_x+player_x_size/2:
             temp = True
+        #death if touchy other entity (that is going faster than it()')self)
         for other_entity in entities:
             if entity["y"] < other_entity["y"]+other_entity["ysc"]/2+entity["ysc"]/2 and entity["y"] > other_entity["y"]-other_entity["ysc"]/2-entity["ysc"]/2 and entity["lane"] == other_entity["lane"] and entity["speedmult"] < other_entity["speedmult"] and entity != other_entity:
                 entities.pop(entities.index(entity))
@@ -123,10 +139,12 @@ def entitytick():
             if recent_generations[str(i)] <= 0:
                 recent_generations.pop(str(i))
 
+    #decide wether to return how much score needs to be added this tick (usually 0), or kil player because touchy enemy
     if temp:
         return "ded"
     return score_to_add
 
+#SUPPOSED to be an easy way to change biomes without a bajillion repeating blocks of code, but I tried, and as you can see, was WILDLY successful getting that to work. (thanks smolder from WOF for the quote. good book seris, if you like fantasy you should read it if you haven't.)
 def setbiome(biomename): #doesnt work right now ):
     current_biome = biomename
     entities = []
@@ -138,17 +156,22 @@ def setbiome(biomename): #doesnt work right now ):
     lanewidth = biomes[biomename]["lanewidth"]
     drag = biomes[biomename]["drag"]
 
+#text on the screen. may or may not of been stolen from a snake game tutorial...
 def message(msg:str, txt_colour:tuple, bkgd_colour:tuple|None, pos:tuple, f:str, fontsize:int|float):
     font = pygame.font.Font(f, fontsize)
     txt = font.render(msg, True, txt_colour, bkgd_colour)
     text_box = txt.get_rect(center = pos)
     screen.blit(txt, text_box)
 
+#stuff, idk.
 inmenu = True
 mov = [0, 0]
 keys_left = [pygame.K_a, pygame.K_LEFT]
 keys_right = [pygame.K_d, pygame.K_RIGHT]
+
+#main game loop (1==1 = always running)
 while 1==1:
+    #do stuff when press button
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             q()
@@ -168,10 +191,13 @@ while 1==1:
             if event.key in keys_right:
                 mov[1] = 0
 
+    #tick things when not paused
     if not inmenu:
+        #figure out walls
         wallpos = (lanes/2)*lanesep+lanesep/2-lanewidth/2
         wallwidth = 100
 
+        #draw background
         drawbg(biomes[current_biome]["bgcol"], biomes[current_biome]["lanecol"], biomes[current_biome]["wallcol"])
 
         #basically playertick
@@ -191,6 +217,8 @@ while 1==1:
         if player_momentum < -drag:
             player_momentum += drag
             player_momentum *= 1-drag
+        
+        #visual of entities
         if not devmode or (devmode and devsettings["showsprites"]):
             screen.blit(pygame.transform.scale(car_gray, (player_x_size, player_y_size)), ((screen_width/2+player_x-player_x_size/2, player_y-player_y_size), (player_x_size, player_y_size)))
             #pygame.draw.rect(screen, (255, 200, 255), (screen_width/2+player_x-player_x_size/2, player_y-player_y_size, player_x_size, player_y_size))
@@ -200,6 +228,7 @@ while 1==1:
             pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x+player_x_size/2-2, player_y-player_y_size, 2, player_y_size))
             pygame.draw.rect(screen, (0, 0, 255), (screen_width/2+player_x-player_x_size/2, player_y-2, player_x_size, 2))
 
+        #stuff to do when player dies
         entity_output = entitytick()
         if entity_output == "ded":
             highscore_read = open("high_score.txt")
@@ -241,12 +270,14 @@ while 1==1:
                     player_x = 0
                     mov = [0, 0]
                     break
-
+        
+        #idk i forgot
         if not inmenu:
             score += entity_output
             ticks_ingame += 1
             message(f"Score: {score}", (0, 0, 0), None, (screen_width/2, 50), "freesansbold.ttf", 20)
 
+    #draw stuff in menu/pause
     else:
         drawbg((54, 54, 54), None, None)
         message("racing.assess", (255, 255, 255), None, (screen_width/2, 147), "freesansbold.ttf", 60)
@@ -302,6 +333,7 @@ while 1==1:
             drag = biomes[biomename]["drag"]
             player_speed = biomes[biomename]["playerspd"]
 
+    #update the screen and a few variables
     pygame.display.update()
     clock.tick(60)
     ticks += 1
