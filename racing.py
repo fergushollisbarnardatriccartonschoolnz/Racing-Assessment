@@ -8,13 +8,26 @@ pygame.init()
 devmode = False
 devsettings = {"showhitboxes":True, "showsprites":True}
 
-#loading the screen
-screen_width = 640
+#screen height is up here instead of down with the rest of loading screen because player y needs it to be calculated
 screen_height = 640
-screen = pygame.display.set_mode((screen_width, screen_height))
-game_icon = pygame.image.load("game_icon.png")
-pygame.display.set_icon(game_icon)
-pygame.display.set_caption("racing")
+
+#variables setup
+ticks = 0
+score = 0
+difficulty = 1
+ticks_ingame = 0
+player_speed = 1
+player_x = 0
+player_y = screen_height*0.75
+player_momentum = 0
+drag = 0.1
+player_x_size = 43
+player_y_size = 86
+
+#lane variables
+lanes = 4
+lanesep = 100
+lanewidth = 10
 
 #textures
 car_lightred = pygame.image.load("car_lightred.png")
@@ -46,32 +59,24 @@ car_darkgray = pygame.image.load("car_darkgray.png")
 car_black = pygame.image.load("car_black.png")
 clock = pygame.time.Clock()
 
-#variables setup
-ticks = 0
-score = 0
-difficulty = 1
-ticks_ingame = 0
-player_speed = 1
-player_x = 0
-player_y = screen_height*0.75
-player_momentum = 0
-drag = 0.1
-player_x_size = 43
-player_y_size = 86
-
-#lane variables
-lanes = 4
-lanesep = 100
-lanewidth = 10
-
 #biome data
 current_biome = "null"
 biomes = {
-    "null":{"drag":0.1, "playerspd":1, "screenx":640, "screeny":640, "lanes":4, "lanesep":100, "lanewidth":10, "bgcol":(143, 143, 143), "lanecol":(101, 101, 101), "wallcol":(123, 123, 123), "carcols":(car_black, car_darkgray, car_gray, car_lightgray, car_white), "carsize":(60, 120)},
-    "frost":{"drag":0.05, "playerspd":0.7815, "screenx":740, "screeny":640, "lanes":5, "lanesep":100, "lanewidth":10, "bgcol":(140, 140, 200), "lanecol":(100, 100, 160), "wallcol":(120, 120, 180), "carcols":(car_darkblue, car_blue, car_lightblue, car_cyan, car_white, car_lightgray), "carsize":(60, 120)},
-    "volcanic":{"drag":0.175, "playerspd":1.135, "screenx":900, "screeny":720, "lanes":6, "lanesep":110, "lanewidth":12, "bgcol":(200, 140, 140), "lanecol":(160, 100, 100), "wallcol":(180, 120, 120), "carcols":(car_darkred, car_red, car_lightred, car_brown, car_orange, car_lightorange, car_yellow, car_lightyellow, car_black, car_darkgray), "carsize":(85, 170)},
-    "grassland":{"drag":0.105, "playerspd":1.105, "screenx":960, "screeny":700, "lanes":8, "lanesep":102, "lanewidth":10, "bgcol":(100, 160, 100), "lanecol":(60, 120, 60), "wallcol":(80, 140, 80), "carcols":(car_darkgreen, car_green, car_lightgreen, car_gray, car_olive, car_blue, car_yellow, car_red, car_white, car_purple, car_pink, car_lightpink, car_lightpurple, car_lightblue, car_brown), "carsize":(70, 140)}
+    "null":{"drag":0.1, "playerspd":1, "wallwidth":100, "screeny":640, "lanes":4, "lanesep":100, "lanewidth":10, "bgcol":(143, 143, 143), "lanecol":(101, 101, 101), "wallcol":(123, 123, 123), "carcols":(car_black, car_darkgray, car_gray, car_lightgray, car_white), "carsize":(60, 120)},
+    "frost":{"drag":0.05, "playerspd":0.7815, "wallwidth":100, "screeny":640, "lanes":5, "lanesep":100, "lanewidth":10, "bgcol":(140, 140, 200), "lanecol":(100, 100, 160), "wallcol":(120, 120, 180), "carcols":(car_darkblue, car_blue, car_lightblue, car_cyan, car_white, car_lightgray), "carsize":(60, 120)},
+    "volcanic":{"drag":0.175, "playerspd":1.135, "wallwidth":100, "screeny":720, "lanes":6, "lanesep":110, "lanewidth":12, "bgcol":(200, 140, 140), "lanecol":(160, 100, 100), "wallcol":(180, 120, 120), "carcols":(car_darkred, car_red, car_lightred, car_brown, car_orange, car_lightorange, car_yellow, car_lightyellow, car_black, car_darkgray), "carsize":(85, 170)},
+    "grassland":{"drag":0.105, "playerspd":1.105, "wallwidth":100, "screeny":700, "lanes":8, "lanesep":102, "lanewidth":10, "bgcol":(100, 160, 100), "lanecol":(60, 120, 60), "wallcol":(80, 140, 80), "carcols":(car_darkgreen, car_green, car_lightgreen, car_gray, car_olive, car_blue, car_yellow, car_red, car_white, car_purple, car_pink, car_lightpink, car_lightpurple, car_lightblue, car_brown), "carsize":(70, 140)}
           }
+
+def screenx():
+    return (lanes)*(lanesep+lanewidth/2)+biomes[current_biome]["wallwidth"]*2
+
+#loading the screen
+screen_width = screenx()
+screen = pygame.display.set_mode((screen_width, screen_height))
+game_icon = pygame.image.load("game_icon.png")
+pygame.display.set_icon(game_icon)
+pygame.display.set_caption("racing")
 
 #entity data
 entities = []#{"col":(255, 255, 255), "lane":0, "y":0, "xsc":20, "ysc":20}]
@@ -149,13 +154,13 @@ def entitytick():
 def setbiome(biomename): #doesnt work right now ):
     current_biome = biomename
     entities = []
-    screen_width = biomes[biomename]["screenx"]
-    screen_height = biomes[biomename]["screeny"]
-    screen = pygame.display.set_mode((screen_width, screen_height))
     lanes = biomes[biomename]["lanes"]
     lanesep = biomes[biomename]["lanesep"]
     lanewidth = biomes[biomename]["lanewidth"]
     drag = biomes[biomename]["drag"]
+    screen_width = screenx
+    screen_height = biomes[biomename]["screeny"]
+    screen = pygame.display.set_mode((screen_width, screen_height))
 
 #text on the screen. may or may not of been stolen from a snake game tutorial...
 def message(msg:str, txt_colour:tuple, bkgd_colour:tuple|None, pos:tuple, f:str, fontsize:int|float):
@@ -295,14 +300,14 @@ while 1==1:
             clock.tick(1.65)
             current_biome = biomename
             entities = []
-            screen_width = biomes[biomename]["screenx"]
-            screen_height = biomes[biomename]["screeny"]
-            screen = pygame.display.set_mode((screen_width, screen_height))
             lanes = biomes[biomename]["lanes"]
             lanesep = biomes[biomename]["lanesep"]
             lanewidth = biomes[biomename]["lanewidth"]
             drag = biomes[biomename]["drag"]
             player_speed = biomes[biomename]["playerspd"]
+            screen_width = screenx()
+            screen_height = biomes[biomename]["screeny"]
+            screen = pygame.display.set_mode((screen_width, screen_height))
     if score >= 175 and current_biome == "frost":
         for biomename in ["volcanic"]:
             screen.fill((40, 40, 40))
@@ -310,14 +315,14 @@ while 1==1:
             clock.tick(1.65)
             current_biome = biomename
             entities = []
-            screen_width = biomes[biomename]["screenx"]
-            screen_height = biomes[biomename]["screeny"]
-            screen = pygame.display.set_mode((screen_width, screen_height))
             lanes = biomes[biomename]["lanes"]
             lanesep = biomes[biomename]["lanesep"]
             lanewidth = biomes[biomename]["lanewidth"]
             drag = biomes[biomename]["drag"]
             player_speed = biomes[biomename]["playerspd"]
+            screen_width = screenx()
+            screen_height = biomes[biomename]["screeny"]
+            screen = pygame.display.set_mode((screen_width, screen_height))
     if score >= 315 and current_biome == "volcanic":
         for biomename in ["grassland"]:
             screen.fill((40, 40, 40))
@@ -325,14 +330,14 @@ while 1==1:
             clock.tick(1.65)
             current_biome = biomename
             entities = []
-            screen_width = biomes[biomename]["screenx"]
-            screen_height = biomes[biomename]["screeny"]
-            screen = pygame.display.set_mode((screen_width, screen_height))
             lanes = biomes[biomename]["lanes"]
             lanesep = biomes[biomename]["lanesep"]
             lanewidth = biomes[biomename]["lanewidth"]
             drag = biomes[biomename]["drag"]
             player_speed = biomes[biomename]["playerspd"]
+            screen_width = screenx()
+            screen_height = biomes[biomename]["screeny"]
+            screen = pygame.display.set_mode((screen_width, screen_height))
 
     #update the screen and a few variables
     pygame.display.update()
