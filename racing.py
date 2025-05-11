@@ -8,27 +8,6 @@ pygame.init()
 devmode = False
 devsettings = {"showhitboxes":True, "showsprites":True}
 
-#screen height is up here instead of down with the rest of loading screen because player y needs it to be calculated
-screen_height = 640
-
-#variables setup
-ticks = 0
-score = 0
-difficulty = 1
-ticks_ingame = 0
-player_speed = 1
-player_x = 0
-player_y = screen_height*0.75
-player_momentum = 0
-drag = 0.1
-player_x_size = 43
-player_y_size = 86
-
-#lane variables
-lanes = 4
-lanesep = 100
-lanewidth = 10
-
 #textures
 car_lightred = pygame.image.load("car_lightred.png")
 car_red = pygame.image.load("car_red.png")
@@ -59,10 +38,31 @@ car_darkgray = pygame.image.load("car_darkgray.png")
 car_black = pygame.image.load("car_black.png")
 clock = pygame.time.Clock()
 
+#screen height is up here instead of down with the rest of loading screen because player y needs it to be calculated
+screen_height = 640
+
+#variables setup
+ticks = 0
+score = 0
+difficulty = 1
+ticks_ingame = 0
+player_speed = 1
+player_x = 0
+player_y = screen_height*0.75
+player_momentum = 0
+drag = 0.1
+player_x_size = 43
+player_y_size = 86
+
+#lane variables (for first biome)
+lanes = 4 #this + 1 = actual amount of lanes
+lanesep = 100
+lanewidth = 10
+
 #biome data
 current_biome = "null"
 biomes = {
-    "null":{"drag":0.1, "playerspd":1, "wallwidth":100, "screeny":640, "lanes":4, "lanesep":100, "lanewidth":10, "bgcol":(143, 143, 143), "lanecol":(101, 101, 101), "wallcol":(123, 123, 123), "carcols":(car_black, car_darkgray, car_gray, car_lightgray, car_white), "carsize":(60, 120)},
+    "null":{"drag":drag, "playerspd":player_speed, "wallwidth":100, "screeny":640, "lanes":lanes, "lanesep":lanesep, "lanewidth":lanewidth, "bgcol":(143, 143, 143), "lanecol":(101, 101, 101), "wallcol":(123, 123, 123), "carcols":(car_black, car_darkgray, car_gray, car_lightgray, car_white), "carsize":(60, 120)},
     "frost":{"drag":0.05, "playerspd":0.7815, "wallwidth":100, "screeny":640, "lanes":5, "lanesep":100, "lanewidth":10, "bgcol":(140, 140, 200), "lanecol":(100, 100, 160), "wallcol":(120, 120, 180), "carcols":(car_darkblue, car_blue, car_lightblue, car_cyan, car_white, car_lightgray), "carsize":(60, 120)},
     "volcanic":{"drag":0.175, "playerspd":1.135, "wallwidth":100, "screeny":720, "lanes":6, "lanesep":110, "lanewidth":12, "bgcol":(200, 140, 140), "lanecol":(160, 100, 100), "wallcol":(180, 120, 120), "carcols":(car_darkred, car_red, car_lightred, car_brown, car_orange, car_lightorange, car_yellow, car_lightyellow, car_black, car_darkgray), "carsize":(85, 170)},
     "grassland":{"drag":0.105, "playerspd":1.105, "wallwidth":100, "screeny":700, "lanes":8, "lanesep":102, "lanewidth":10, "bgcol":(100, 160, 100), "lanecol":(60, 120, 60), "wallcol":(80, 140, 80), "carcols":(car_darkgreen, car_green, car_lightgreen, car_gray, car_olive, car_blue, car_yellow, car_red, car_white, car_purple, car_pink, car_lightpink, car_lightpurple, car_lightblue, car_brown), "carsize":(70, 140)}
