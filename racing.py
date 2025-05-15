@@ -41,7 +41,7 @@ clock = pygame.time.Clock()
 #screen height is up here instead of down with the rest of loading screen because player y needs it to be calculated
 screen_height = 640
 
-#variables setup
+#variables (setup - these MAY be changed later in the code, so changing them here may not do anything.)
 ticks = 0
 score = 0
 difficulty = 1
@@ -158,7 +158,7 @@ def setbiome(biomename): #doesnt work right now ):
     lanesep = biomes[biomename]["lanesep"]
     lanewidth = biomes[biomename]["lanewidth"]
     drag = biomes[biomename]["drag"]
-    screen_width = screenx
+    screen_width = screenx()
     screen_height = biomes[biomename]["screeny"]
     screen = pygame.display.set_mode((screen_width, screen_height))
 
@@ -262,7 +262,7 @@ while 1==1:
                     for biomename in ["null"]:
                         current_biome = biomename
                         entities = []
-                        screen_width = biomes[biomename]["screenx"]
+                        screen_width = screenx()
                         screen_height = biomes[biomename]["screeny"]
                         screen = pygame.display.set_mode((screen_width, screen_height))
                         lanes = biomes[biomename]["lanes"]
